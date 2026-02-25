@@ -43,7 +43,7 @@ jobs:
           
           echo "REF_URL=${{ vars.REF_URL || 'https://0x0f.dev/' }}" > .env
           echo "REF_LABEL=${{ vars.REF_LABEL || '0x0f.dev' }}" >> .env
-          echo "LICENSE=© 2024-$CURRENT_YEAR <a href=\"https://0x0f.dev/\" target=\"_blank\">dotcubecn</a>." >> .env
+          echo "LICENSE=© 2024-$CURRENT_YEAR <a href=\"https://0x0f.dev/\" target=\"_blank\">深渊架构ShinKouyo</a>." >> .env
           
           npm install
           npm run build
