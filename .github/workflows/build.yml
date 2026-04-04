@@ -39,12 +39,13 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: lts/*
-          cache: npm
-          cache-dependency-path: source_repo/package-lock.json
+          package-manager-cache: false
 
       - name: Install dependencies and build
         working-directory: ./source_repo
         run: |
+          set -euo pipefail
+
           CURRENT_YEAR=$(date +%Y)
 
           {
@@ -53,11 +54,13 @@ jobs:
             echo "LICENSE=© 2024-$CURRENT_YEAR <a href=\"https://0x0f.dev/\" target=\"_blank\">深渊架构ShinKouyo</a>."
           } > .env
 
-          npm ci
+          npm install
           npm run build
 
       - name: Sync files to public directory
         run: |
+          set -euo pipefail
+
           rm -rf public
           mkdir -p public
           cp -r source_repo/dist/. public/
@@ -65,6 +68,8 @@ jobs:
 
       - name: Commit and push changes
         run: |
+          set -euo pipefail
+
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
