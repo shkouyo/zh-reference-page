@@ -11,6 +11,10 @@ on:
 env:
   TZ: Asia/Shanghai
 
+concurrency:
+  group: quick-reference-sync
+  cancel-in-progress: false
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -19,51 +23,56 @@ jobs:
 
     steps:
       - name: Checkout current repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
-          ref: 'main'
+          ref: main
+          fetch-depth: 1
 
       - name: Checkout source repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
-          repository: 'jaywcjlove/reference'
-          path: 'source_repo'
+          repository: jaywcjlove/reference
+          path: source_repo
           fetch-depth: 1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 'lts/*'
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: source_repo/package-lock.json
 
       - name: Install dependencies and build
         working-directory: ./source_repo
         run: |
           CURRENT_YEAR=$(date +%Y)
-          UPDATE_TIME=$(date "+%Y-%m-%d %H:%M:%S")
-          
-          echo "REF_URL=${{ vars.REF_URL || 'https://0x0f.dev/' }}" > .env
-          echo "REF_LABEL=${{ vars.REF_LABEL || '0x0f.dev' }}" >> .env
-          echo "LICENSE=© 2024-$CURRENT_YEAR <a href=\"https://0x0f.dev/\" target=\"_blank\">深渊架构ShinKouyo</a>." >> .env
-          
-          npm install
+
+          {
+            echo "REF_URL=${{ vars.REF_URL || 'https://0x0f.dev/' }}"
+            echo "REF_LABEL=${{ vars.REF_LABEL || '0x0f.dev' }}"
+            echo "LICENSE=© 2024-$CURRENT_YEAR <a href=\"https://0x0f.dev/\" target=\"_blank\">深渊架构ShinKouyo</a>."
+          } > .env
+
+          npm ci
           npm run build
 
       - name: Sync files to public directory
         run: |
           rm -rf public
           mkdir -p public
-          cp -r source_repo/dist/* public/
+          cp -r source_repo/dist/. public/
           rm -rf source_repo
 
       - name: Commit and push changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          COMMIT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
+
           git add public/
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
+            COMMIT_TIME=$(date "+%Y-%m-%d %H:%M:%S")
             git commit -m "$COMMIT_TIME CST"
             git push
           fi
